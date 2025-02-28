@@ -3,6 +3,9 @@ Trying to get machine to solve the Tango game I play on LinkedIn everyday.
 
 
 ## Step 1 - A dataset.
-I extracted 5 images from tangogame.org manually.
+Create a simple interface with Tkinter.
 
-## Step 2 - Extracting the information.
+
+
+## Step 2 - LP solver
+Create the constraints to use a LP solver (PuLP) to find the solution. 
