@@ -10,60 +10,53 @@ W = 800
 curr_dir = '/Users/sachith/Hobby Projects/TangoSolver'
 
 class ImageButton(Button):
-    def __init__(self, master, ix_, iy_,  state_matrix_, *args, **kwargs):
+    def __init__(self, master, iy_, ix_,  state_matrix_,image0, image1, image2, buttonH, buttonW, *args, **kwargs):
         self.ix = ix_
         self.iy = iy_
         self.state_matrix = state_matrix_
 
-        self.emptyCell = ImageTk.PhotoImage(file="dataset/empty.png")       # 0
-        self.sun = ImageTk.PhotoImage(file = "dataset/sun.png")             # 1
-        self.moon = ImageTk.PhotoImage(file = "dataset/moon.png")           # 2
-        super().__init__(master, image = self.emptyCell,height=70,width=70, *args, **kwargs)
-        self.state_matrix[self.ix][self.iy] = 0
+        self.emptyCell = ImageTk.PhotoImage(file=image0)       # 0
+        self.sun = ImageTk.PhotoImage(file = image1)             # 1
+        self.moon = ImageTk.PhotoImage(file = image2)           # 2
+        super().__init__(master, image = self.emptyCell,height=buttonH,width=buttonW, *args, **kwargs)
+        self.state_matrix[self.iy][self.ix] = 0
         self.bind("<Button-1>", self.leftClickFunction)
         self.bind("<Button-2>", self.rightClickFunction)
 
 
     def leftClickFunction(self, event = None):
-        if self.cget("state") != "disabled": #Ignore click if button is disabled
-            if self.state_matrix[self.ix][self.iy] == 1:                       # sun to empty.
-                self.state_matrix[self.ix][self.iy] = 0
-                self.config(image = self.emptyCell)
-            else:                                           # go from empty/moon to sun
-                self.state_matrix[self.ix][self.iy] = 1
-                self.config(image = self.sun)
-        print('row =',self.ix,'col = ',self.iy)
-        print(self.state_matrix)
-
+        print('leftClickFunction',self.iy,self.ix,self.state_matrix[self.iy][self.ix])
+        if self.state_matrix[self.iy][self.ix] == 1:                       # sun to empty.
+            self.state_matrix[self.iy][self.ix] = 0
+            self.config(image = self.emptyCell)
+        else:                                           # go from empty/moon to sun
+            self.state_matrix[self.iy][self.ix] = 1
+            self.config(image = self.sun)
 
     def rightClickFunction(self, event = None):
-        if self.cget("state") != "disabled": #Ignore click if button is disabled
-            if self.state_matrix[self.ix][self.iy] == 2:                       # moon to empty.
-                self.state_matrix[self.ix][self.iy] = 0
-                self.config(image = self.emptyCell)
-            else:                                           # go from empty/sun to sun
-                self.state_matrix[self.ix][self.iy] = 2
-                self.config(image = self.moon)
+        print('rightClickFunction',self.iy,self.ix,self.state_matrix[self.iy][self.ix])
+        if self.state_matrix[self.iy][self.ix] == 2:                       # moon to empty.
+            self.state_matrix[self.iy][self.ix] = 0
+            self.config(image = self.emptyCell)
+        else:                                           # go from empty/sun to sun
+            self.state_matrix[self.iy][self.ix] = 2
+            self.config(image = self.moon)
         
-        print('row =',self.ix,'col = ',self.iy)
-        print(self.state_matrix)
 
-    def setState(self,event='<Return>'):
-        print(self.ix,self.iy,self.state_matrix[self.ix][self.iy])
-        if self.cget("state") != "disabled":
-            if self.state_matrix[self.ix][self.iy] == 0:
-                self.config(image = self.emptyCell)
+    def setState(self):
+        print(self.ix,self.iy,self.state_matrix[self.iy][self.ix])
+        if self.state_matrix[self.iy][self.ix] == 0:
+            self.config(image = self.emptyCell)
 
-            elif self.state_matrix[self.ix][self.iy] == 1:
-                self.config(image = self.sun)
+        elif self.state_matrix[self.iy][self.ix] == 1:
+            self.config(image = self.sun)
 
-            elif self.state_matrix[self.ix][self.iy] == 2:
-                self.config(image = self.moon)
-        
-            else:
-                assert(False)
-            
-            self.invoke()
+        elif self.state_matrix[self.iy][self.ix] == 2:
+            self.config(image = self.moon)
+        else:
+            assert(False)
+
+
 
 
 class TangoBoard(Canvas):
@@ -72,9 +65,6 @@ class TangoBoard(Canvas):
 
         super().__init__(master,  height=H, width=W,bg='white',*args, **kwargs)
         
-        self.state_matrix = [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]]
-        self.master_reference=master
-
         # Creates all vertical lines at intevals of 100
         for i in range(100, 701, 100):
             self.create_line([(i, 100), (i, 700)], tag='grid_line',fill='black',width=3)
@@ -83,23 +73,39 @@ class TangoBoard(Canvas):
         for i in range(100, 701, 100):
             self.create_line([(100, i), (700, i)], tag='grid_line',fill='black',width=3)
 
-        self.CellButtons = [[None, None, None, None, None, None], [None, None, None, None, None, None], [None, None, None, None, None, None], [None, None, None, None, None, None], [None, None, None, None, None, None], [None, None, None, None, None, None]]
+
+
+
+        self.state_matrix = [[0 for _ in range(6)] for _ in range(6) ]
+        self.CellButtons = [[None for _ in range(6)] for _ in range(6) ]
         # print(self.CellButtons)
 
         for row in range(6):
             for col in range(6):
-                self.CellButtons[col][row] = ImageButton(master,col,row,self.state_matrix)
-                self.CellButtons[col][row].place(x=(100*row)+115,y=(100*col)+115)
-
-        
-        # self.verticalAlignedButtons = [[None, None, None, None, None], [None, None, None, None, None], [None, None, None, None, None], [None, None, None, None, None], [None, None, None, None, None], [None, None, None, None, None]]
-        # #Try to draw a between cell button
-        # for row in range(6):
-        #     for col in range(5):
-        #         self.CellButtons[row][col] = Button(self,text=' ')
+                self.CellButtons[row][col] = ImageButton(master,row,col,self.state_matrix,"dataset/empty.png","dataset/sun.png","dataset/moon.png",70,70)
+                self.CellButtons[row][col].place(x=(100*col)+115,y=(100*row)+115)
  
         solve_button = Button(self,text='Solve!',command = self.solve_the_problem)
         solve_button.place(x=380,y=750)
+
+
+        # new buttons for equality and inequality
+        self.vertical_inequality_matrix = [[0 for _ in range(5)] for _ in range(6) ]
+        self.InequalityButtonsVertical = [[None for _ in range(5)] for _ in range(6) ]
+        for row in range(6):
+            for col in range(5):
+                self.InequalityButtonsVertical[row][col] = ImageButton(master,row,col,self.vertical_inequality_matrix,"dataset/empty.png","dataset/equals.png","dataset/opposite.png",20,20,borderwidth=1)
+                self.InequalityButtonsVertical[row][col].place(x=(100*col)+190,y=(100*row)+140)
+
+
+                # new buttons for equality and inequality
+        self.horizontal_inequality_matrix = [[0 for _ in range(6)] for _ in range(5) ]
+        self.InequalityButtonsVertical = [[None for _ in range(6)] for _ in range(5) ]
+        for row in range(5):
+            for col in range(6):
+                self.InequalityButtonsVertical[row][col] = ImageButton(master,row,col,self.horizontal_inequality_matrix,"dataset/empty.png","dataset/equals.png","dataset/opposite.png",20,20,borderwidth=1)
+                self.InequalityButtonsVertical[row][col].place(x=(100*col)+140,y=(100*row)+190)
+    
 
 
     def solve_the_problem(self):
@@ -112,10 +118,10 @@ class TangoBoard(Canvas):
         # Adding the input constraints.
         for row in range(6):
             for col in range(6):
-                if self.state_matrix[col][row]==1:
-                    prob+= matrix_of_variable[col][row] == 0
-                elif self.state_matrix[col][row]==2:
-                    prob+= matrix_of_variable[col][row] == 1
+                if self.state_matrix[row][col]==1:
+                    prob+= matrix_of_variable[row][col] == 0
+                elif self.state_matrix[row][col]==2:
+                    prob+= matrix_of_variable[row][col] == 1
 
 
         # Adding row wise restrictions.
@@ -135,6 +141,23 @@ class TangoBoard(Canvas):
                 prob += lpSum([matrix_of_variable[col][r] for r in range(start,start+3)]) <= 2
 
         
+        # Adding Vertical Inequality
+        for row in range(6):
+            for col in range(5):
+                if self.vertical_inequality_matrix[row][col] == 1:
+                    prob+= matrix_of_variable[row][col] == matrix_of_variable[row][col+1]
+                elif self.vertical_inequality_matrix[row][col] == 2:
+                    prob+= matrix_of_variable[row][col] != matrix_of_variable[row][col+1]
+
+
+        # Adding Horizontal Inequality
+        for row in range(5):
+            for col in range(6):
+                if self.horizontal_inequality_matrix[row][col] == 1:
+                    prob+= matrix_of_variable[row][col] == matrix_of_variable[row+1][col]
+                elif self.horizontal_inequality_matrix[row][col] == 2:
+                    prob+= matrix_of_variable[row][col] != matrix_of_variable[row+1][col]
+        
 
 
         prob.writeLP("Tango_Solver_LP.lp")
@@ -144,7 +167,6 @@ class TangoBoard(Canvas):
 
         for row in range(6):
             for col in range(6):
-                # print(row,col,self.state_matrix[col][row],int(value(matrix_of_variable[col][row])+1))
                 self.state_matrix[col][row] = int(value(matrix_of_variable[col][row])+1)
                 self.CellButtons[col][row].setState()
                 
