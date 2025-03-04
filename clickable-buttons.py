@@ -25,7 +25,7 @@ class ImageButton(Button):
 
 
     def leftClickFunction(self, event = None):
-        print('leftClickFunction',self.iy,self.ix,self.state_matrix[self.iy][self.ix])
+        prev = self.state_matrix[self.iy][self.ix]
         if self.state_matrix[self.iy][self.ix] == 1:                       # sun to empty.
             self.state_matrix[self.iy][self.ix] = 0
             self.config(image = self.emptyCell)
@@ -33,14 +33,20 @@ class ImageButton(Button):
             self.state_matrix[self.iy][self.ix] = 1
             self.config(image = self.sun)
 
+        print('leftClickFunction',self.iy,self.ix,prev,' -> ',self.state_matrix[self.iy][self.ix])
+
+
     def rightClickFunction(self, event = None):
-        print('rightClickFunction',self.iy,self.ix,self.state_matrix[self.iy][self.ix])
+        prev = self.state_matrix[self.iy][self.ix]
         if self.state_matrix[self.iy][self.ix] == 2:                       # moon to empty.
             self.state_matrix[self.iy][self.ix] = 0
             self.config(image = self.emptyCell)
         else:                                           # go from empty/sun to sun
             self.state_matrix[self.iy][self.ix] = 2
             self.config(image = self.moon)
+        
+        print('leftClickFunction',self.iy,self.ix,prev,' -> ',self.state_matrix[self.iy][self.ix])
+
         
 
     def setState(self):
@@ -100,11 +106,11 @@ class TangoBoard(Canvas):
 
                 # new buttons for equality and inequality
         self.horizontal_inequality_matrix = [[0 for _ in range(6)] for _ in range(5) ]
-        self.InequalityButtonsVertical = [[None for _ in range(6)] for _ in range(5) ]
+        self.InequalityButtonsHorizontal = [[None for _ in range(6)] for _ in range(5) ]
         for row in range(5):
             for col in range(6):
-                self.InequalityButtonsVertical[row][col] = ImageButton(master,row,col,self.horizontal_inequality_matrix,"dataset/empty.png","dataset/equals.png","dataset/opposite.png",20,20,borderwidth=1)
-                self.InequalityButtonsVertical[row][col].place(x=(100*col)+140,y=(100*row)+190)
+                self.InequalityButtonsHorizontal[row][col] = ImageButton(master,row,col,self.horizontal_inequality_matrix,"dataset/empty.png","dataset/equals.png","dataset/opposite.png",20,20,borderwidth=1)
+                self.InequalityButtonsHorizontal[row][col].place(x=(100*col)+140,y=(100*row)+190)
     
 
 
@@ -145,18 +151,18 @@ class TangoBoard(Canvas):
         for row in range(6):
             for col in range(5):
                 if self.vertical_inequality_matrix[row][col] == 1:
-                    prob+= matrix_of_variable[row][col] == matrix_of_variable[row][col+1]
+                    prob+= lpSum([matrix_of_variable[row][col],matrix_of_variable[row][col+1]])==2
                 elif self.vertical_inequality_matrix[row][col] == 2:
-                    prob+= matrix_of_variable[row][col] != matrix_of_variable[row][col+1]
+                    prob+= lpSum([matrix_of_variable[row][col],matrix_of_variable[row][col+1]])==1
 
 
         # Adding Horizontal Inequality
         for row in range(5):
             for col in range(6):
                 if self.horizontal_inequality_matrix[row][col] == 1:
-                    prob+= matrix_of_variable[row][col] == matrix_of_variable[row+1][col]
+                    prob+= lpSum([matrix_of_variable[row][col],matrix_of_variable[row+1][col]])==2
                 elif self.horizontal_inequality_matrix[row][col] == 2:
-                    prob+= matrix_of_variable[row][col] != matrix_of_variable[row+1][col]
+                    prob+= lpSum([matrix_of_variable[row][col],matrix_of_variable[row+1][col]])==1
         
 
 
