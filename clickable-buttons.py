@@ -50,7 +50,6 @@ class ImageButton(Button):
         
 
     def setState(self):
-        print(self.ix,self.iy,self.state_matrix[self.iy][self.ix])
         if self.state_matrix[self.iy][self.ix] == 0:
             self.config(image = self.emptyCell)
 
@@ -115,9 +114,17 @@ class TangoBoard(Canvas):
 
 
     def solve_the_problem(self):
-        print(self.state_matrix)
-        matrix_of_variable = LpVariable.dicts("Choice", (range(6), range(6)), cat="Binary")
+        # print(self.state_matrix)
+        # print('horizontal_inequality_matrix')
+        # for lst in self.horizontal_inequality_matrix:
+        #     print(*lst)
 
+        # print('vertical_inequality_matrix')
+        # for lst in self.vertical_inequality_matrix:
+        #     print(*lst)
+
+
+        matrix_of_variable = LpVariable.dicts("Choice", (range(6), range(6)),lowBound=0, upBound=1, cat="Binary")
 
         prob = LpProblem("TangoSolver")
 
@@ -132,26 +139,26 @@ class TangoBoard(Canvas):
 
         # Adding row wise restrictions.
         for row in range(6):
-            prob += lpSum([matrix_of_variable[c][row] for c in range(6)]) == 3
+            prob += lpSum([matrix_of_variable[row][c] for c in range(6)]) == 3
             for start  in range(4):             ## 3 in a row cannot be same.
-                prob += lpSum([matrix_of_variable[c][row] for c in range(start,start+3)]) >= 1
-                prob += lpSum([matrix_of_variable[c][row] for c in range(start,start+3)]) <= 2
+                prob += lpSum([matrix_of_variable[row][c] for c in range(start,start+3)]) >= 1
+                prob += lpSum([matrix_of_variable[row][c] for c in range(start,start+3)]) <= 2
                 
             
         
         # Adding col wise restrictions.
         for col in range(6):
-            prob += lpSum([matrix_of_variable[col][r] for r in range(6)]) == 3
+            prob += lpSum([matrix_of_variable[r][col] for r in range(6)]) == 3
             for start  in range(4):
-                prob += lpSum([matrix_of_variable[col][r] for r in range(start,start+3)]) >= 1
-                prob += lpSum([matrix_of_variable[col][r] for r in range(start,start+3)]) <= 2
+                prob += lpSum([matrix_of_variable[r][col] for r in range(start,start+3)]) >= 1
+                prob += lpSum([matrix_of_variable[r][col] for r in range(start,start+3)]) <= 2
 
         
         # Adding Vertical Inequality
         for row in range(6):
             for col in range(5):
                 if self.vertical_inequality_matrix[row][col] == 1:
-                    prob+= lpSum([matrix_of_variable[row][col],matrix_of_variable[row][col+1]])==2
+                    prob+= lpSum([matrix_of_variable[row][col],-1*matrix_of_variable[row][col+1]])==0
                 elif self.vertical_inequality_matrix[row][col] == 2:
                     prob+= lpSum([matrix_of_variable[row][col],matrix_of_variable[row][col+1]])==1
 
@@ -160,25 +167,20 @@ class TangoBoard(Canvas):
         for row in range(5):
             for col in range(6):
                 if self.horizontal_inequality_matrix[row][col] == 1:
-                    prob+= lpSum([matrix_of_variable[row][col],matrix_of_variable[row+1][col]])==2
+                    prob+= lpSum([matrix_of_variable[row][col],-1*matrix_of_variable[row+1][col]])==0
                 elif self.horizontal_inequality_matrix[row][col] == 2:
                     prob+= lpSum([matrix_of_variable[row][col],matrix_of_variable[row+1][col]])==1
         
 
 
-        prob.writeLP("Tango_Solver_LP.lp")
-        prob.solve()
+        prob.solve(COIN_CMD(msg=0))
         
         print(self.state_matrix)
 
         for row in range(6):
             for col in range(6):
-                self.state_matrix[col][row] = int(value(matrix_of_variable[col][row])+1)
-                self.CellButtons[col][row].setState()
-                
-        print(self.state_matrix)
-
-
+                self.state_matrix[row][col] = int(value(matrix_of_variable[row][col])+1)
+                self.CellButtons[row][col].setState()
 
 def main():
     root = Tk()
